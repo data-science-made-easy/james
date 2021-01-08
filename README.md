@@ -1,0 +1,1 @@
+Please take look at the [manual](ext/report/manual/james-dev-2021-01-08-manual.html).
