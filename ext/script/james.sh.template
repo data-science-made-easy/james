@@ -1,0 +1,39 @@
+#!/bin/sh
+echo
+echo "                       ::::::'##::::'###::::'##::::'##:'########::'######::"
+echo "                       :::::: ##:::'## ##::: ###::'###: ##.....::'##... ##:"
+echo "                       :::::: ##::'##:. ##:: ####'####: ##::::::: ##:::..::"
+echo "                       :::::: ##:'##:::. ##: ## ### ##: ######:::. ######::"
+echo "                       '##::: ##: #########: ##. #: ##: ##...:::::..... ##:"
+echo "                        ##::: ##: ##.... ##: ##:.:: ##: ##:::::::'##::: ##:"
+echo "                       . ######:: ##:::: ##: ##:::: ##: ########:. ######::"
+echo "                       :......:::..:::::..::..:::::..::........:::......:::"
+echo "                       `r get_param("james_version")`, R `r get_param("r_version")`, `r get_param("cpb_lib_version")`."
+echo
+
+if [ ! -f `r fix_path(file.path('..', basename(script_file)), use_local_path = T)` ]; then
+  echo "                       !"
+  echo "                       ! Please find a new version of James in `r install_root()`"
+  echo "                       !"
+fi
+
+cp -n -p `r fix_path(report_file_name, use_local_path = T)` .
+
+if [ ! -f `r fix_path(get_param("james_all_xlsx_in_current_dir_R_script"), use_local_path = T)` ]; then
+  echo
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  echo ~~~~
+  echo ~~~~ Error: the current version of James was removed.
+  echo ~~~~
+  echo ~~~~ You can find a new version with bug fixes and/or new features in `r install_root()`.
+  echo ~~~~
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  exit
+fi
+
+echo Initializing...
+echo
+
+Rscript `r fix_path(get_param("james_all_xlsx_in_current_dir_R_script"), use_local_path = T)`
+echo Done.

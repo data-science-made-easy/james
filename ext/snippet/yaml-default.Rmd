@@ -1,0 +1,3 @@
+title: "`r if (is_set(report$title)) report$title else 'Overview of your figures and data'`"
+author: "`r if (is_set(report$author)) report$author else get_user_name()`"
+date: "`r if (is_set(report$date)) report$date else format(Sys.Date())`"

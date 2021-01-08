@@ -1,0 +1,845 @@
+---
+title: "James' manual&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![](./ext/img/james-small.png)"
+author: "Dr. M. Dijkstra <[m.dijkstra@cpb.nl](mailto:m.dijkstra@cpb.nl)>"
+date: "Version: **`r report$james_version`**"
+output:
+  html_document:
+    number_sections: true
+    css: ext/style/style.css
+    keep_md: yes
+    toc: true
+    toc_depth: 2
+---
+
+`r knitr::opts_chunk$set(cache = TRUE, cache.path = "/tmp/cache/")`
+
+```{r, set_param_example_lst, echo = F, eval = T}
+report$param_example_lst <- create_parameter_usage_lst()
+```
+
+> <span style="color:#CD0469">**Please contact**</span> <[the author](mailto:m.dijkstra@cpb.nl)> if you run into bugs or if you want to make use of features that are not implemented yet. For questions about layout or help adapting your figures to the CPB-style, please contact the [Communication Department](https://confluence.cpb.nl/display/COM/CDS+medewerkers). <span style="color:#CD0469">**Please beware**</span> that browsers other than **Chrome** may not display this manual correctly.
+
+# A short introduction
+This manual explains how to create customizable CPB-style figures with James
+from Excel and R. James' goal is to tackle most of the CEP/MEV figures, which
+amounts mainly to customizable line and bar figures, scatter plots and fan
+charts - brightened up with some text labels. This novel version of James aims to
+
+* bundle different settings in one parameter, which makes it easy to
+    * change the dimensions of your figure (*e.g.* `style = wide`)
+    * switch to English numbers and dates (`style = english`)
+    * remove title or legend and extend the figure to that area (`style = no-title, no-legend`)
+    * turn your figure to landscape (`turn = y`)
+    * add a logo (`logo_show = y`)
+* plot CBS-data directly in the CPB-style, just given an url (see [this section](#plot-cbs-data-in-cpb-style))
+* make it easy to [create a report](#create-a-report)
+    * in *e.g.* html and pdf
+    * out-of-the-box of all figures in one xlsx-file (see *e.g.* [kMEV2021](#a-realistic-report))
+    * a custom report
+* be faster than the previous version
+* be easier to use than the previous version
+    * below each figure in this manual is one line that explains how to reproduce it
+
+## What you need to know
+The general workflow to create figures with James is:
+
+1. **Copy the most recent *.bat (or *.sh) script from ``r get_param("install_root_remote_prod_use_time")`` to the path where you want to create figures.**
+2. **Start the bat (or sh) file by by clicking on it.** This will:
+    * process all `xlsx files` it sees.
+    * give you a copy of the manual
+    * create a subdirectory `generated/` with your figures
+
+> The bat (or sh) file will warn you if you don't make use of the latest and greatest version of the software.
+
+So, how to start now? This manual recommends to first get some experience by running through the following section. Next, you can skip through this manual and find a figure with a style you like. Below that figure you'll read how to recreate that figure. You can use that as a starting point and adapt it to your personal needs. Tip: use $<$Control$>$+F to quickly find terms in this manual.
+
+# A kick-start example
+The following figure is a so-called 'Hello World' example. Directly below the figure you'll find the instructions to reproduce it (in green).
+
+`r figure_with_params(report, "hello-world")`
+
+## A more realistic example
+`r figure_with_params(report, "werkloosheid")`
+
+If you succeed to reproduce the above figure(s), you're ready to learn more!
+
+# Figure type
+Parameter `r link_param("type")` specifies how the time series should appear in your figure. If you leave parameter `type` empty, it will default to `type = line`. If you specify only one value (*e.g.* `type = bar--`), James will use that value for each of the time series in your data. If want to mix different types, then you should specify the type for each of your time series. In which case the type's n'th element corresponds to the n'th time series in your data. In particular, time series that are described with two columns of data (*e.g.* fan/bandwidth/area and whiskers), also need two values for parameter `type`.
+
+> Parameter `type` must have either zero values, one value, or *n* values. In case of zero values it defaults to `line` for all time series. In case of one value, this type will be used for all time series in your data. Otherwise, *n* should equal the number of time series columns in your data (*i.e.* all, exclusive the *x*-axis).
+
+## Line
+Section '[A kick-start example](#a-kick-start-example)' shows how to create a line figure with two series. Implicitely, the parameter `type = line` (or `type = line, line`) is set there.
+
+Some examples of figures with lines: `r figure_list_with_type(LINE)`.
+
+
+### Line with discontinuity
+A discontinuity works as follows. The data for the x-axis, in the first column of your xlsx-file, needs values everywhere. So, you should provide an *x*-value at the position where you want the discontinuity. You can leave the cell, which corresponds to the position of the discontinuity in the respective series, empty. Please look at the xlsx-file (link below figure) to see how that's done here. This example also shows how to put multiple variants of the same series in the same plot.
+
+`r figure_with_params(report, "discontinuity")`
+
+### Dashed lines
+Next to the default 'solid' line (*i.e.* `r link_param("line_lty")``= 1`) there are five other line types you can choose from. The order of the values you give to a parameter corresponds to the order of the lines. So, the first value corresponds to the first line, the second value to the second line, etc.
+
+`r figure_with_params(report, "line-dash")`
+
+### Line with symbol (*e.g.* dot)
+You can decorate your line with dots, diamonds or other symbols. [This figure](#symbol-examples) shows the available symbols. The symbols are superimposed at the data points you provide in your data tab. An example:
+
+`r figure_with_params(report, "line-symbol")`
+
+The following example adds a 'rose'-colored diamond to the second time series. The diamond is automatically added to the legend too.
+
+`r figure_with_params(report, data = WorldPhones, title = 'Number of phones US vs. Europe', file_base = 'line_decoration', order = 1:2, line_symbol = c(0, 18), line_symbol_col = c(NA, "rose"))`
+
+### Parameters to tweak your lines
+`r describe_param_set(report, "# LINES")`
+
+## Bar
+Bars can be next to each other (`type = bar--`) or stacked (`type = bar=`) or a combination of the two.
+
+### Bars next to each other
+Type `bar=` puts bars next to each other.
+
+`r figure_with_params(report, data = WorldPhones, type = 'bar--', title = 'Number of phones in the world', file_base = 'bars_non_equidistant')`
+
+In this example there is no data given for years 1952 ... 1955. Therefore, you see a 'gap' between the subsequent sets of bars. The figure, however, could suggest that there were no phones in those years. To circumvent this issue, you can consider to tell James that the values on the x-axis are 'words'. James does not interpret their value then and just puts them equidistant on the *x*-axis -- as can be seen in the following example.
+
+`r figure_with_params(report, data = WorldPhones, type = 'bar--', title = 'Number of phones in the world', x_lab_as_text = T, file_base = 'bars_equidistant')`
+
+List of figures with bars next to each other: `r figure_list_with_type(BAR_NEXT)`.
+
+### Bars stacked
+Type `bar=` stacks bars.
+
+`r figure_with_params(report, data = WorldPhones, type = c('bar=', 'bar--', 'bar--', 'bar=', 'bar--', 'bar--', 'bar='), title = 'Number of phones in the world', x_lab_as_text = T, file_base = 'bars_stacked')`
+
+Parameter `r link_param("bar_stack_index")` determines the positions of the stacks. By default they are shown at the right hand side. The figure below sets `bar_stack_index = 1` and moves the stacks to the left. It also sets a name for the stack and adds it to the legend by with `bar_stack_name = "The Americas"`.
+
+`r figure_with_params(report, data = WorldPhones, type = c('bar=', 'bar--', 'bar--', 'bar=', 'bar--', 'bar--', 'bar='), title = 'Number of phones in the world', x_lab_as_text = T, file_base = 'bars_stacked_named_moved', bar_stack_name = "The Americas", bar_stack_index = 1)`
+
+List of figures with stacked bars: `r figure_list_with_type(BAR_STACK)`.
+
+### Dealing with many bars
+The visualization of many bars in one figure may be a challenge. Opting for a wide figure (`style = wide`) obviously helps to create more space. In addition one can play with `r link_param("bar_gap_fraction")`, here set to 0.5 in the figure below so the size of the whitespace between the bars is balanced with the width of the bars. To ensure that the line is not submerged by the bars, the line is highlighted.
+
+The author uses `r link_param("x_scale")`` = 1000` because the *x*-values where given in thousands of euros and the author wants just euros on the *x*-axis. Putting `r link_param("x_lab_big_mark_show")``= y` adds a thousands separator so large numbers are easier to read.
+
+`r figure_with_params(report, "many-bars")`
+
+### Group data
+One can group data points. Dependent on the orientation of the plot (`turn = y` or `turn = n`), the groups are shown in a different manner.
+
+#### Vertical grouping
+The following example shows how you can 'manually' group data points. Please note the zero that was added to the data (below the figure is a link to the xlsx-file). The zero creates space between the groups. In addition, *y*-axis, which is now the *x*-axis because `turn = y` starts at zero. If you don't want this number (here: 0) to affect your axis, you can choose a value in between the range of the other values.
+
+`r figure_with_params(report, "bar-group-0")`
+
+In the xlsx-file you can add group names in a column preceding your data:
+
+`r figure_with_params(report, "bar-group-label")`
+
+#### Horizontal grouping
+For horizontal grouping, you can use parameter `r link_param("group_spacing")` if you want to add some extra space between the groups. This parameter also works for vertical grouping but may be less needed there.
+
+`r figure_with_params(report, "bar-group-label-horiz")`
+
+Another example of horizontal grouping is the following figure. The `r link_param("x_title")` is shifted lower with `r link_param("x_title_v_shift")` and used to add a kind of extra footnote refering to the title (using ¹). The legend is shifted higher with `r link_param("legend_y")` and put on one line with `r link_param("legend_n_per_column")` to make space for it. In addition `r link_param("x_lab_font_size")` scales the font size of labels at the *x*-axis somewhat smaller.
+
+`r figure_with_params(report, "investment-nl")`
+
+#### Tailor groups
+`r describe_param_set(report, "# GROUPS")`
+
+### Highlight a specific series
+In general, parameter `r link_param("highlight_series")` will give color `r link_param("highlight_col")` (default: `r get_param("highlight_col")`) to that series. *I.e.*, also for non-bar type figures.
+
+The following figure, for example, highlights the second time series.
+
+`r figure_with_params(report, data = WorldPhones, type = "bar=", highlight_series = 2, highlight_col = "yellow", file_base = 'bars_highlight_series')`
+
+If you use this parameter to highlight a time series of type 'bar' (`bar--` or `bar=`), you can choose to limit the highlighting to one bar in particular. The following figure shows how you can do so with parameter `r link_param("highlight_x")`.
+
+`r figure_with_params(report, "highlight-bar")`
+
+#### Tailor your highlighting
+Please note that if the 'highlight color' is part of your palette, which the default highlight color is, it will be removed from the palette so that only the highlighted time series gets the wanted color.
+
+`r describe_param_set(report, "# HIGHLIGHT")`
+
+### Parameters to tailor your bar plot
+`r describe_param_set(report, "# BARS")`
+
+## Histogram
+This section shows how you can use James to create a basic histogram of one single vector of data. You can use the following parameters.
+
+`r describe_param_set(report, "# HIST")`
+
+An example of a histogram:
+
+`r figure_with_params(report, "histogram")`
+
+If you want to enrich your histogram with other time series, you should consider the histogram as a special case of a bar plot and manually add its *x*- and *y*-values to the data tab. Doing so enables to add other time series to your plot as well.
+
+## Scatter plot, adding symbols
+This section shows how to add dots (more generic: symbols) to your plot. The following parameters help to fine-tune the dots to your needs.
+
+`r describe_param_set(report, "# DOTS")`
+
+List of figures with dots: `r figure_list_with_type(DOT)`.
+
+### Scatter plot
+The following figure has only a few dots so these dots can be big. You can use `r link_param("dot_size")` to downscale the dots or use `r link_param("dot_shape")``= .` to get really small dots.
+
+Example of a scatter plot:
+`r figure_with_params(report, "scatter-example")`
+
+
+### Special case: purchasing power plots
+You can use `r link_param("style")``= ppower` to produce standardized purchasing power plots. An example:
+
+`r figure_with_params(report, "ppower")`
+
+### Different shapes of the dot/symbol
+The following figure shows the different symbols you can choose from.
+
+<a name = "symbol-examples"></a>
+```{r, dot_shape_examples, echo = F, eval = T}
+n           <- 23
+m           <- matrix(NA, nrow = n, ncol = n)
+diag(m)     <- c(rep(5, 5), rep(4, 5), rep(3, 5), rep(2, 5), rep(1, 3))
+colnames(m) <- 1:n
+m           <- cbind(c(1:5, 1:5, 1:5, 1:5, 1:3), m)
+```
+
+`r paste0("![](", plot(report, data = m, type = "dot", dot_shape = 1:n, dot_size = 2, title = "Available symbols and their 'dot_shape' value", palette = c('cpb', 'kansrijk', 'google', 'pony'), x_axis_show = F, y_axis_show = F, legend_n_per_column = 4, hline_bold_show = F, file_base = 'dot_shape_examples'), ")")`
+
+As an alternative to the above 23 shapes, you can also use a dot (`dot_shape = .` or equivalently `dot_shape = 46`) and letters as symbol shape. Value `.` is handled specially. It is a rectangle of side 0.01 inch = 0.0254 cm (scaled by `dot_size`). In addition, if `dot_size = 1` (the default), each side is at least one pixel (1/72 inch on the pdf).
+
+### Real world example
+The figure below demonstrates `dot_shape = 18`. The 'dots' are highlighted with default color `highlight_col = `r get_param("highlight_col")``. If that color is part of your palette (which it is here!), it will be automatically removed from the palette so that only the highlighted time series gets the desired color.
+
+`r figure_with_params(report, "dot-shape")`
+
+## Area/bandwidth/confidence interval/fan
+The two subsections below describe how to visualize your time series as an area, bandwidth and fan.
+
+### Stacked areas
+Parameter `type = area=` stacks the time series in your plot as areas, starting at the *x*-axis; *i.e.* the *y*-axis includes *y* = 0 by default. Parameter `r link_param("area_stack_name")` enables you to label the stack in the legend. An example of which is shown in the following figure. Please note that by default the `area_stack_name` is placed last in the legend; *i.e.* at position 4. To achieve the same vertical order in the legend as in the figure and keeping the `area_stack_name` last, parameter `r link_param("legend_order")` `= 3, 2, 1, 4`.
+
+`r figure_with_params(report, "stacked-area")`
+
+Time series of type `area=` may have negative values, in which case the area is placed below the *x*-axis. Please beware, a stacked area is currently not allowed to have both positive and negative values. In other words, a 'stacked area' can't cross the *x*-axis.
+
+List of figures with stacked areas: `r figure_list_with_type(AREA_STACK)`.
+
+### Bandwidths
+This subsection describes how you can plot an area without stacking it on another area. A non-stacked area has a bottom and a top. So, you'll need two series of data to describe one area. These series you can mark with `type = area, area`, consecutively.
+
+The following figure shows two lines with a confidence interval. The color palette is chosen so it's clear to which line the interval belongs.
+
+`r figure_with_params(report, "oversterfte")`
+
+One figure can hold more than one bandwidths:
+
+`r figure_with_params(report, "area-multiple")`
+
+### A standard fan plot
+A 'fan plot' is a special case of bandwidth plot. It always follows one and the same structure: one line, followed by three confidence intervals with fixed colors. Parameter `r link_param("style")``= fan` initializes three parameters. Firstly, parameter `r link_param("palette")` for colors, secondly parameter `r link_param("type")` for the time series types conform the CPB style. *I.e.*, first a rose line, followed by three blue intervals with increasing intensities. [This figure](#fan-chart-col-pal) shows the color palette. You can re-use these colors in the case you want to customize your fan chart. Thirdly, the four items in the legend are put in one and the same column (`legend_n_per_column = 4`).
+
+`r figure_with_params(report, "fan-example")`
+
+### Parameters to tweak your area plots
+TODO
+
+## Box plot
+The default [box plot](https://en.wikipedia.org/wiki/Box_plot) in James shows quantities `box_quantiles = `r get_param("box_quantiles")``.
+
+`r figure_with_params(report, "box")`
+
+The following figure is an example how to adjust the box plot.
+
+`r figure_with_params(report, "box-simple")`
+
+List of box-plot figures: `r figure_list_with_type(BOX)`.
+
+### Tailor your box plot
+`r describe_param_set(report, "# BOXPLOT")`
+
+## Whiskers
+This section explains how to use whiskers in your figure.
+
+`r figure_with_params(report, "dot-whisker")`
+
+Parameter `r link_param("whisker_series")` indicates to which series the whisker(s) belong. This is important for the following three reasons. First it determines the position of the whisker in the legend. Second for a bar plot this parameter is crucial for the *x*-position of the whiskers. In the following figure, `whisker_series = 2` makes sure that the whisker is shown on top of the second time series (*i.e.* the right-hand bar). Third, in case of a plot that contains bars with whiskers, James will automatically limit the width of the whiskers to the width of the corresponding bars (manually adaptable by parameter `r link_param("whisker_edge_length")`), which prevents whiskers to overlap with each other.
+
+The following is an example how multiple whiskers can be put in one plot. The author of the figure manually shifted the first series a little to the left and the second a little to the right. You can inspect the xlsx-file.
+
+`r figure_with_params(report, "dot-whisker-double")`
+
+Whiskers in bar plots:
+
+`r figure_with_params(report, "bar-bar-dot-whisker")`
+
+Parameter `r link_param("whisker_legend_show_n")` determines the number of whiskers the legend shows - which you may want if different whiskers have different meanings.
+
+`r figure_with_params(report, "corona-vmbo-impact-whisk-group")`
+
+List of figures with whiskers: `r figure_list_with_type(WHISKER)`.
+
+### Tailor your whiskers
+`r describe_param_set(report, "# WHISKERS")`
+
+## Combining the above types
+You can combine different types in one plot. Parameter `r link_param("name_col")` colors the line black. Section '[Colors](#colors)' discusses how to use this paramter.
+
+`r figure_with_params(report, "bars-and-line")`
+
+## Geographic maps
+James supports maps on two scales: The Netherlands and the world.
+
+### The Netherlands
+#### Colored regions
+This section explains how to create a figure with a geographic map of different regions, each with a given color. A color may be either given directly or be interpolated based on a given value.
+
+The following box provides _an overview_ of the [type of regions of The Netherlands](https://www.cbs.nl/nl-nl/dossier/nederland-regionaal/geografische-data/cbs-gebiedsindelingen) you can choose from:
+
+    Arbeidsmarktregio, Arrondissementsgebied, Brandweerregio, Buurt, COROP-gebied, COROP-plusgebied, COROP-subgebied, Gemeente, GGD-regio, Grootstedelijke aglomeratie, Jeugdregio, Kamer van Koophandelregio, Landbouwgebied, Landbouwgroep, Landsdeel, NUTS1, NUTS2, NUTS3, Politieregio, Provincie, Regionaalmeld Coordinatiepunt, Regionale Eenheid, RES-regios, Ressort, RPA-gebied, Stadsgewest, Toeristengebied, Toeristengroep, Veiligheidsregio, Veiligthuisregio, Wijk, Zorgkantoorregio.
+
+These items are available for different years. The maps are downloaded on the fly. CBS explains [here](https://www.cbs.nl/nl-nl/onze-diensten/open-data/statline-als-open-data/cartografie) and [here](https://www.cbs.nl/nl-nl/onze-diensten/open-data/statline-als-open-data/snelstartgids) how to work with [PDOK](https://pdok-ngr.readthedocs.io/index.html) maps in R.
+
+The following subsections explain step by step how to start creating your own custom geographic map.
+
+#### Step 1: choose a map
+You start with selecting a specifc map from [Appendix: CBS Geo-regions](#appendix-cbs-geo-regions) and assign that value to parameter `r link_param("geo_cbs_map")`. Next, with parameter `r link_param("style")` you indicate that you want to create a map. As last, you set parameter `r link_param("tab")` to a non-existing data tab. For example, your meta-tab could look as follows.
+
+
+| parameter | value |
+|-----------|-------|
+| `r link_param("tab")`         | data |
+| `r link_param("style")`       | map |
+| `r link_param("geo_cbs_map")` | arbeidsmarktregio_2020 |
+
+Doing so will result in a map that divides The Netherlands in so-called *arbeidsmarktregio's* in the year 2020.
+
+#### Step 2: save file and create figure
+After saving your file, you can run James for the first time. If the tab you refer to does not exist yet (*important!*), James will create a new tab with the given name, fill it with data (see next step) and create the following figure.
+
+`r figure_with_params(report, "geo-first-example")`
+
+#### Step 3: initialisation  of the data tab (re-open xlsx-file)
+After running James, you can find the freshly created data tab after closing and re-opening your xlsx file. In the data tab, you'll find four columns:
+
+- `region` with the region names for the chosen `geo_cbs_map`
+    - you can manually remove regions if you prefer to use codes
+- `code` with the corresponding region codes
+    - codes are stable identifiers for regions
+    - James prefers to work with codes and uses `region` names only if you remove the codes column
+- `value` with a unique integer for each region
+    - you can remove the values or update them later, according to which the regions will be colored
+    - the subsection below will explain how you can 'hardcode' a color for a given region
+- `label` with numbers 1, 2, ... as an example label for each region
+    - you can remove or update the labels later
+    
+To be complete, there is one more column which you can add too (not yet present):
+
+- `color` so you can 'manually' set colors
+    - the xlsx-file of the next figure uses a color column to give color `sun` to region `Zeeland`
+    - you can open the respective xlsx-file to see how this is done
+
+#### Step 4: customizing your figure
+The figure below equals the figure above, after the following modifications.
+
+1. Remove the first region (Groningen)
+    - the figure below does not show Groningen anymore
+2. Remove the value of region Friesland
+    - the figure still shows the region even though its color is transparent now
+3. The label of the region Friesland was updated to '(leeg)'
+4. The `r link_param("palette")` holds one color more (+rose)
+5. Add parameter `r link_param("geo_col_threshold")` with values for the colors in the palette (1 = anakiwa, 18.5 = endeavour, 36 = rose); Section '[Colors](#colors)' explains the use of colors in detail
+6. Add parameters `r link_param("name")` and `r link_param("name_col")` to specify the legend; Section '[Legend](#legend)' explains in detail how you can further tweak or remove the legend
+7. Finally add a `r link_param("footnote")` and a `r link_param("title")`
+
+
+`r figure_with_params(report, "geo-three-cols")`
+
+Next to region names, it's also possible and probably preferable to make use of codes to identify regions. The following figure does so. The head of its data tab lists:
+
+`r knitr::kable(head(openxlsx::read.xlsx(report$xlsx, sheet = "geo-participatie-gemeenten")))`
+
+`r figure_with_params(report, "geo-participatie-gemeenten")`
+
+#### Parameters to further tweak your map
+
+`r describe_param_set(report, "# GEO REGIONS")`
+
+### The world
+The following figure uses `style = world-map` to show a map of the world with CPB-style colors, added green.
+
+`r figure_with_params(report, "world-map")`
+
+Because the figure is in English, it uses `style = english` too.
+
+#### Country abbreviations
+You can specify the countries following the [ISO 3166-1 standard](https://en.wikipedia.org/wiki/ISO_3166-1) for either [alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) two letter country codes, or [alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3) three letter country codes. James is not case sensitive here, so you can use both uppercase and lowercase.
+
+The above figure uses the alpha-2 standard, in which, for example, The Netherlands is represented with 'NL'. This alpha-2 standard is used most prominently for the Internet's country code top-level domains (with a few exceptions). The alpha-3 standard on the other hand represents The Netherlands with 'NLD'.
+
+> Currently, James uses the R-package `rnaturalearth` to represent the world. Unfortunately, this package does not exactly follow the above standards for the following countries: Kosovo (KOS), Palestine (PSX), Somaliland (SOL), South Sudan (SDS), Turkish Republic of Northern Cyprus (CYN) and Western Sahara (SAH). If you need these countries, please use the alpha-3 standard plus the abbreviations shown here.
+
+#### Fancy layout
+<!-- mat <- data.frame(cbind(world[["adm0_a3"]], 5 * (runif(nrow(world)) - .5)))
+openxlsx::write.xlsx(mat, file = "random_world.xlsx") -->
+If you want a more fancy layout of the title, you can use `style = world-map-www`.
+
+`r figure_with_params(report, "world-map-www")`
+
+This layout also enables you to set a value for the title (parameter `r link_param("world_map_value")`). The value appears at the right size of the title with the blue background. The background color of the value is automatically adapted based on the thresholds (`r link_param("world_map_threshold")`) and colors set in the legend. Please note that the `r link_param("palette")` parameter sets the corresponding colors (parameter `r link_param("palette_world_map")` holds the default colors). The horizontal size of the blue background of the title scales with its content. 
+
+`r figure_with_params(report, "world-map-www-value")`
+
+#### Parameters to tweak your world map
+
+`r describe_param_set(report, "# WORLD MAP")`
+
+# Styles: layout, size, dimensions, orientation and language
+James has a parameter `r link_param("style")`, which enables you to quickly change the layout of your figure. Each style defines a unique combination of settings.
+
+The main styles are:
+
+## Dimensions styles
+The default dimensions of a figure are width ``r get_param("width")` `r get_param("width", style = "unit")`` by height ``r get_param("height")` `r get_param("height", style = "unit")``. You can change this by setting the `style` parameter with one of the following values. James will automatically adjust all internal figure margins accordingly.
+
+- `style = small` `r get_param("style_small")`
+    - `r get_style_parameters("style_small")`
+- `style = big` `r get_param("style_big")`
+    - `r get_style_parameters("style_big")`
+- `style = tall` `r get_param("style_tall")`
+    - `r get_style_parameters("style_tall")`
+- `style = slide` `r get_param("style_slide")`
+    - `r get_style_parameters("style_slide")` 
+- `style = slide-wide` `r get_param("style_slide_wide")`
+    - `r get_style_parameters("style_slide_wide")`
+- `style = wide` `r get_param("style_wide")`
+    - `r get_style_parameters("style_wide")`
+
+It does not make sense to combine these.
+
+## Document styles
+Currently there are two document styles: the default one that is used for a *notition*, a *memo* and a *background document*, and the *kansrijk* document style.
+
+- `style = kansrijk` `r get_param("style_kansrijk")`
+    - `r get_style_parameters("style_kansrijk")`
+
+## Language style
+
+- `style = english` `r get_param("style_english")`
+    - `r get_style_parameters("style_english")`
+
+This style combines always with other styles.
+
+## Margins for legend and title styles
+
+- `style = no-legend` `r get_param("style_no_legend")`
+    - `r get_style_parameters("style_no_legend")`
+- `style = no-title` `r get_param("style_no_title")`
+    - `r get_style_parameters("style_no_title")`
+
+## Axes styles
+
+- `style = x-top` `r get_param("style_x_top")`
+    - `r get_style_parameters("style_x_top")`
+- `style = y-right` `r get_param("style_y_right")`
+    - `r get_style_parameters("style_y_right")` (to do)
+
+## Figure type styles
+
+- `style = fan` `r get_param("style_fan")`
+    - `r get_style_parameters("style_fan")`
+- `style = histogram` `get_param("style_histogram")`
+- `style = box-plot` `r get_param("style_box_plot")`
+    - `r get_style_parameters("style_box_plot")`
+- `style = map` `r get_param("style_map")`
+    - `r get_style_parameters("style_map")`
+- `style = world-map` `r get_param("style_world_map")`
+    - `r get_style_parameters("style_world_map")`
+
+Of course, you can combine some styles (not all, because some contradict each other, *e.g.* the dimensions). The following figure combines `style = no-title, no-legend`. Some styles are automatically combined with others. For example, `box` implements `no-legend` and `kansrijk` implements `no-title`.
+
+`r figure_with_params(report, "industriele-productie", style = c('no-title', 'no-legend'))`
+
+In the above case James will give you a trivial warning:
+```r
+## WARNING ## While your style includes 'no-title', you have specified a title. This seems contradictionary.
+```
+
+For the record also parameter `style = default`: `r get_param("style_default")`.
+
+## Set dimensions to a custom value
+`r describe_param_set(report, "# DIMENSIONS")`
+
+## Portrait or landscape, vertical or horizontal figures
+Parameter `r link_param("turn")` with value `turn = y` (or `turn = TRUE`) swaps the *x*- and *y*-axes of your plot:
+
+`r figure_with_params(report, "bars-and-line", turn = T, file_base = "bars-and-line-turn")`
+
+## An example of a 'kansrijk' figure
+Kansrijk figures don't have a title, are wider, have a white background and use a different color palette for the time series.
+
+`r figure_with_params(report, "kansrijk")`
+
+This manual contains a section specifically on bar-plots that explains in detail how you can create your own custom bar-plot.
+
+## Add the CPB-logo to your figure
+For official figures, you may want to add a logo on top. Parameter `r link_param("logo_show")``= y` does so. Text next to the logo is by default `r get_param("logo_text_nl")` and if `style = english` then the text is `r get_param("logo_text_en")`.
+
+`r figure_with_params(report, data = USArrests, turn = T, style = "tall", type = "bar=", logo_show = T, title = "Violent crime rates in the USA", x_title = "state", y_title = "Number per 100,000", order = c(1,2,4), file_base = 'usarrests')`
+
+`r describe_param_set(report, "# LOGO")`
+
+# The basics
+This section discusses the basics which probably enable you to create most of the figures. 
+This section ends with Subsection [structure of the xlsx-file](#structure-of-the-xlsx-file), which explains which files are and which files aren't processed by James. It also explains the details you need if you start creating your own xlsx files. Next, Section '[Quick customizations](#quick-customizations)' explains how to further tailor your figures in more detail.
+
+## Frequently used settings
+Use `open = y` (or `n`) if you (don't) want your figures to be opened automatically after creation.
+To speed-up the process, you can temporarily exclude some figures from the generation process by `create = n`.
+
+## Forecasts, prognoses, predictions
+Time series often have a known part (usually in the past) and a predicted part (*e.g.* in the future). You can use parameter `r link_param("forecast_x")` to indicate from which point on your data is predicted. Parameter `forecast_x` is defined as the last moment (read: *x*-value) that is observed/known. Values larger than `forecast_x` are considered to be forecasted.
+
+`r figure_with_params(report, data = WorldPhones, type = c("line", rep("bar=", 6)), forecast_x = 1957.5, title = "Forecasted from 1958", footnote = "For aesthetical reasons and not cutting bars, we use forecast_x = 1957.5", file_base = 'worldphones_forecasted')`
+
+### Parameters to tweak your forecast layout
+`r describe_param_set(report, "# FORECAST")`
+
+## Add help lines and shading
+James offers several ways to add help lines and shading to a plot. Parameter `r link_param("x_shading")` shades part of your figure *before* the plotting starts, parameter `r link_param("shading_suppress_x")` applies the shading *after* the plotting takes place. Therefore, `shading_suppress_x` enables you to 'mask' part of your plot. The first figure demonstrates the use of `shading_suppress_x`, *c.q.* `shading_suppress_x_date`.
+
+`r figure_with_params(report, "cbs-weeksterfte")`
+
+The second figure demonstrates the use of `x_shading`, *c.q.* `x_shading_date`.
+
+`r figure_with_params(report, "cbs-weeksterfte-normalized")`
+
+### Parameters to tweak help lines and shading
+
+`r describe_param_set(report, "# HELP LINES, SHADING")`
+
+## Plot a formula
+There are two ways to visualize a formula. First, you can use formula's in Excel (see Section '[Data manipulation](#data-manipulation)' for details). Second, with the parameter `r link_param("formula")`.
+
+The following figure adds the sinus of the *x*-values in the example from Section '[A kick-start example](#a-kick-start-example)', multiplied by ten. Please note that the first column in the `data` parmeter (*i.e.* `p$data[, 1]`), holds the *x*-values. The following column in the `data` parameter (*i.e.* `p$data[, 2]`) holds the first time series (here: `(6 - x)^2`), the third column (*i.e.* `p$data[, 3]`) holds the second time series, and so on.
+
+`r figure_with_params(report, "hello-world", formula = "10 * sin(p$data[, 1])", formula_name = "sinus", hline_bold = 0, file_base = 'hello-world-sinus')`
+
+### Tailor your formula
+`r describe_param_set(report, "# FORMULA")`
+
+## Add custom R-code for plotting
+Obviously, James can't just make any figure you can think of. If you want to go beyond James' current limits, you may consider to start with a basic figure - so you get the CPB-style for free - and enrich that with custom R-code. The following figure, for example, adds differently sized symbols and a custom legend to the figure. Please beware, the current version of the manual does not correctly show the value of parameter `custom` here; the \$-sign is interpreted wrongly here. As a workaround, please download the xlsx-file via the link below the figure if you want to scrutinize this example in detail.
+
+`r figure_with_params(report, "custom-example")`
+
+### Parameters to tweak your custom figure
+
+`r describe_param_set(report, "# CUSTOM")`
+
+## File format (gif, jpg, pdf, png, svg)
+You can just add the formats you want as boolean parameters to your `meta` tab. By default `png = y` and other formats are put to `n` by default.
+
+Examples:
+
+* `gif = y` provides an animated figure with data starting at zero and 'growing' in `gif_n_frames` frames (default 20) to their actual values. You can set the delay between the steps with paramter `gif_delay` (default 0.1 seconds). This setting is described in more detail further on. NB This setting may work but is not regularly checked and not supported.
+* `jpg = y` provides a jpeg file. This is a compressed file, which may be used to save disk space. The image quality can be controled by `quality` (default 75). *NB This setting may work but is not regularly checked and not supported.*
+* <span style = 'color:#43B546'>**`pdf = y`**</span> provides a vector graphics version of your figure (*i.e.* 'infinite' resolution), which may be used in LaTeX or pdf documents.
+* <span style = 'color:#43B546'>**`png = y`**</span> (the default) provides a so-called 'portable network graphics' version of your figure. **This setting is recommended** because png's are not compressed (and are hence less blurry than jpg's) and guarantee that their layout (including font) is invariant between different software programs that show them (*e.g.* Word, pdf, PowerPoint, etc.).
+* `svg = y` provides a scalable vector graphics version of your figure, which may be used on *e.g.* websites. Svg is also vector graphics but not displayed in each word processing program. NB This setting may work but is not regularly checked and not supported.
+
+So, we recommend using the default **`png`** unless you have good reasons to use a different format.
+
+### A gif is an animated image
+![](./ext/img/james-manual.gif)
+
+Please <[contact the author](mailto:m.dijkstra@cpb.nl)> if you want to gifify your figure :-)
+
+
+## Title
+Obviously, you can set the title of your figure with the parameter `r link_param("title")`. If your title is too broad for your figure, you may add a newline with `\n` to your title. If your figure is (still) too broad, James will autoscale it smaller to make it fit the margins. Please beware, if this happens, your plot doesn't comply anymore with the CPB-style.
+
+## Footnote
+You may add extra information, *e.g.* the source, to the figure by inserting a footnote. By default, the footnote is italic black, aligned bottom right. The following figure shows a footnote that is more prominent but visually less attractive.
+
+`r figure_with_params(report, "footnote-example")`
+
+
+`r describe_param_set(report, "# FOOTNOTE")`
+
+## Text label
+The figure below is an example how you can add a text label if your *x*-axis is of type 'date'. Please see Section '[Axes](#axes)' for details on dates on axes.
+
+`r figure_with_params(report, "regular-text-labels")`
+
+If your *x*-axis comprises dates, you should use `text_x_date` instead of `text_x` as in the following figure. Please see the subsection on parameters for datails.
+
+`r figure_with_params(report, "date-text-label")`
+
+### Parameters to tweak your text label
+`r describe_param_set(report, "# TEXT LABELS")`
+
+## Text labels as 'time series'
+`r describe_param_set(report, "# LABELS AS SERIES")`
+
+The following figure illustrates how one can create a parameter from one of the columns in the data tab. Parameter `r link_param("label_series_n")` (is not set here, and hence defaults to 1) determines the positions of the labels in the figure. The default aligment is `label_align = 4` below the position. As you can see, the labels PT and NL overlap.
+
+`r figure_with_params(report, "text-label-as-series")`
+
+The following figure fixes the overlap by adding parameter `r link_param("label_align")` to the data tab and sets a specific value of 1 (meaning: align below) to label PT. In addition the space between the labels and the dots is reduced with `text_offset = 0.25`.
+
+`r figure_with_params(report, "text-label-as-series-alignment")`
+
+Section '[The data tabs](#the-data-tabs)' explains in detail how and when to use the data tab to set or create parameters that can be used in the plotting.
+
+## Axes
+This section explains how to tweak your axes. It starts with a figure that uses parameters `r link_param("x_axis_show")` and `r link_param("y_axis_show")` to hide both axes.
+
+`r figure_with_params(report, "trend-vs-niveau")`
+
+Please note that the figure above uses long dashes (`r link_param("line_lty")``= 2`), while the adviced default is short dashes (`r link_param("line_lty")``= 3`).
+
+To do: Text on the numbers, dates, precision,
+ook dec separator,
+x_lim_follow_data
+
+### Parameters to tweak axes, gridlines and ticks
+For aesthetic reasons, by default the lowest gridline is made bold. However, in if your figure has bars (`bar--` or `bar=`) or stacked areas (`area=`), by default the gridline at `y = 0` is made bold. You can manually choose to boldify another gridline by setting `r link_param("hline_bold")` to another *y*-value or if you don't want any bold gridline at all, you can set `r link_param("hline_bold_show")`` = n`.
+
+`r describe_param_set(report, "# AXES, GRIDLINES, TICKS")`
+
+### A secondary *y*-axis
+By default, all time series are mapped to the left *y*-axis. One needs a secondary *y*-axis for one or more of the time series, one can use parameter `y_axis = l, l, r` (see `r link_param("y_axis")`) to indicate which time series should be mapped to the secondary *y*-axis, respectively.
+
+`r figure_with_params(report, "secondary_y_axis")`
+
+`r describe_param_set(report, "# SECONDARY Y-AXIS")`
+
+#### Exception: a secondary *y*-axis for one part of the *x*-axis
+By exception it may happen however, that one only wants to map a fraction of the figure on the secondary *y*-axis. The following figure illustrates how to do so for a particular case where the impact of a no-deal Brexit is shown per country. The impact of one of the countries is shown at the secondary *y*-axis. Please note that the data of this single country was scaled by hand (*i.e.* divided by five) and that the labels at the secondary *y*-axis were placed by hand too. Because `turn = y`, the secondary y-axis becomes the *x*-axis at the top of the figure.
+
+`r figure_with_params(report, "impact-no-deal-brexit-tall")`
+
+The following figure shows the exact same data, without swapping the *x*- and *y*-axis (i.e. `turn = n`). This keeps the countries on the *x*-axis.
+
+`r figure_with_params(report, "impact-no-deal-brexit")`
+
+## Legend
+
+`r describe_param_set(report, "# LEGEND")`
+
+## Colors
+James makes it easy to color your time series by putting nice combinations of colors in a so-called palette. You set the palette with parameter `r link_param("palette")`. The default is `palette = auto`. Please note, `auto` is not a palette. `auto` will be replaced by either `cpb_3` if there are less than four time series or by `cpb` if there are more time series. An alternative is `palette = kansrijk` so that the `kansrijk` colors are used (see below for its colors). Might you run out of colors in one palette, you can easily join different palettes, *e.g.* by `palette = cpb, appletv`, which concatenates these two palettes. Subsection [Customization of colors and palettes](#customization-of-colors-and-palettes) shows an example that customizes colors. Subsection [Parameters to tweak your colors](#parameters-to-tweak-your-colors) describes the use of `palette` in more detail. Below you'll find the `appletv` and other carefully composed palettes.
+
+### Color palettes
+```{r, eval = T, col_palettes, echo = F}
+show_col_pals()
+```
+<div style="text-align: right">*All except the first four pallets originate from the `yarrr` pacakge. Kudos for the yarrr package!*</div>
+
+#### The default CBP color palette
+James gives each color a name. You can admire a specific palette and get the names of its colors as follows in R.
+
+```{r, eval = T, cpb_col_pal, echo = T}
+  show_col_pals("cpb", TRUE)
+```
+
+#### The kansrijk color palette
+```{r, eval = T, kansrijk_col_pal, echo = F}
+  show_col_pals("kansrijk", T)
+```
+
+#### The fan color palette
+Fan charts are a special case of the bandwidth plots. If `r link_param("style")` is set to `fan`, James will use the below fan palette.
+<a name = "fan-chart-col-pal"></a>
+
+```{r, eval = T, fan_col_pal, echo = F}
+  show_col_pals("fan", T)
+```
+
+#### Other colors to choose from
+```{r, eval = T, other_cols, echo = F}
+  show_col_pals("extra", T)
+```
+
+### Customization of colors and palettes
+The use of a color palette makes it straighforward to customize the colors in your figure. You can manually set parameter `r link_param("palette")` to a combination of palettes and separate colors as defined above. The figure below combines three separate colors (red, blue, white) with a palette (appletv).
+
+`r figure_with_params(report, "bars-and-line", palette = c("red", "blue", "white", "appletv"), file_base = "bars-and-line-color")`
+
+### Parameters to tweak your colors
+`r describe_param_set(report, "# COLORS")`
+
+## Data manipulation
+You are free to use functions and algebra in your xlsx-file. James will use the result of that. So, if you would put `= 1 + 1` in a cell, Excel will show you the anser (`2`), which will be used by James, too.
+
+Next, there are several ways (*c.q.* parameters) to manipulate your data after you save them in your xlsx-file but before you create the figure:
+
+`r describe_param_set(report, "# DATA MANIPULATION")`
+
+> Please beware of the order in which the data manipulations are performed.
+
+The first step and most straightforward one is `order`, which you can use to re-order your columns before anything else happens. For example, if you would have a data set with only two time series, `order = 2, 1` will have the same effect as swapping the corresponding two columns in the xlsx-file.
+
+The second step uses parameters `r link_param("x_raw_keep")` and `r link_param("y_raw_keep")` to indicate which raw data you want to keep and discard. The advantage of removing data early in the process (here: before scaling), may save computational time and thereby speed-up the process.
+
+The second step in the data manipulation phase is the scaling of your data. For example, `scale = 100` may be used to convert fractions into percentages. If you supply only one value here, that value will be applied to each series. However, you may also choose to scale different series with different values. For example, if you have two time series and `scale = 100, 1`,  the first one will be multiplied by 100.
+
+Third step: similarly to scaling your *y*-values, with `x_scale` you can scale the values on your *x*-axis. Please see `r link_fig("many-bars")` for an example.
+
+The fourth step uses parameters `r link_param("x_keep")` and `r link_param("y_keep")` to indicate which data you want to keep after the scaling has taken place. Data outside these ranges is discarded.
+
+The fifth and last step in the data manipulation phase is a transformation with custom R-code. You can put your own custom transformation function there, but you can also use R's built-in-functions such as `log` in the next figure. Please note that data are first scaled and then transformed.
+
+`r figure_with_params(report, "werkverliezers", y_title = "dzd personen op log-schaal, 15-74 jaar", transformation = "log")`
+
+The parameter `x_lim_follow_data = y` (see `r link_param("x_lim_follow_data")`) makes the x-axis zoom-in to the max so you don't have white spaces left and right. This parameter will be discussed in more detail in the section about axes.
+
+## Structure of the xlsx-file
+James only processes xlsx files that have a tab called `meta`. Other files, *i.e.* *.xls, *.csv files, or xlsx files that don't have a `meta` tab, are ignored.
+
+### The meta tab
+The `meta` tab defines your figures. The first column contains the parameters (*e.g.* for a title). Each following column defines a different figure with parameter values specific for that figure. An example of a frequently used parameter is:
+
+- `r describe_param(report, "tab")`
+
+
+### The globals tab
+You may add a tab called `global`. Parameters defined in this tab are assigned to each of the figures in the `meta` tab, unless overwritten there.
+
+### The data tabs
+There are two different ways to refer to a data set for your figure. One of them is via the parameter `r link_param("tab")` in your `meta` tab. The other way is to refer to a data set via a `CBS link` (discussed in the next subsection). The value of the parameter `tab` should equal the name of one **or more** of the tabs in your xlsx file and hold your data. Such a 'data tab' can have different forms. The most straightforward form is *x*-values in the first column, and time series in the following columns. Each time series should have a header (*i.e.* a name) defined in the first row of the tab.
+
+#### The x-column may also be text
+In case of bar plot.
+
+#### Grouping time series
+James assumes that the first row in the data tab contains the time series names. If, however, the second row contains characters (*i.e.* not all are numbers), however, James assumes you want to group the series. Please note: you can force the grouping with parameter `first_row_grouping = y` (see: `r link_param("first_row_grouping")`) or disable it with `first_row_grouping = n`. Below you'll find examples of the grouping.
+
+#### Defining a parameter in a data tab
+TODO Explain how that works. Section '[Text label](#text-label)' illustrates an example.
+
+<a name = "plot-cbs-data-in-cpb-style"></a>
+# Plot CBS-data in the CBP-style, using just a link
+In some cases, James can plot data straight from a cbs url. Don't use the url in the url-bar for that, but click on the 'export' or 'share' button to find the data url, which you can feed to James.
+
+<img style="float: right;" src="ext/img/cpb-copy-url.png">
+
+In this case, the author has constructed a table with sold house prices in The Netherlands and in 's-Gravenhage, a municipality.
+
+`r if (!get_param("install_local")) figure_with_params(report, "data-straight-from-cbs", param_table_max_width = "10em") else "> Temporarily disabled for faster building; put url back in xlsx"`
+
+> This functionality is under development. It may thus be that it does not work exactly as expected. Please <[contact the author](mailto:m.dijkstra@cpb.nl)> if you don't succeed.
+
+## Adding your own data to CBS-data
+If you refer both to a CBS-url and to a data tab, James will combine the two data sets. For example:
+
+`r if (!get_param("install_local")) figure_with_params(report, "cbs-with-own", param_table_max_width = "10em", order = c(2,3,1)) else "> Temporarily disabled for faster building"`
+
+James puts your own data set first. To make this figure best comparable to the previous, we've changed the order of the time series with parameter `order = 2, 3, 1` so the added bbp series comes third. More about the parameter `r link_param("order")` in Section '[Data manipulation](#data-manipulation)'.
+
+In this case, the added data ('$\Delta$bbp (%)') has a different unit and should be shown on another *y*-axis. The section on how to customize your axes explains in detail how to do so.
+
+
+# Create a report
+James can put your figures in a report, which enables you to have a quick overview and easily share them with colleagues. Next to your figures, you can add a new column and set `type = report` there. That's all.
+
+## A kick-start example
+Report with only one fig.
+
+## Title, author, date and adding a figure
+
+## A realistic report
+[This report](`r fix_path(get_param("kmev2021_result"))`) is what you get out-of-the-box if you run [this xlsx-file](`r fix_path(get_param("kmev2021"))`) (*cf.* <a href="https://www.cpb.nl/sites/default/files/omnidownload/CPB-Juniraming-2020.pdf" target="_blank">'kMEV2021' or 'juniraming 2020'</a>).
+
+## Customize the report's text
+
+## Parameters to tweak your report
+`r describe_param_set(report, "# REPORT")`
+
+# Under the hood
+Building the manual involves creating its figures too. Therefore, the building of the manual is a comprehensive test by itself.
+
+The value of a James-parameter may depend on the style(s) you set. You can find these parameter/style combinations in ``r fix_path(get_param("base-settings-path"))`` (available as variable `globals` if you run the R-code). You can overwrite a parameter value in both the `globals` tab and the `meta` tab of your Excel file.
+
+Based on the parameters, James creates the figures as follows. First a series of pre-processing functions are executed. You can easily add new functions (see parameter `r link_param("preprocess_order")`) and/or override these functions: `r vec_as_md_seq(report$preprocess_order)`.
+
+Next, the process functions are executed (see parameter `r link_param("plot_order")`): `r vec_as_md_seq(report$plot_order)`.
+
+If you want to further improve or extend James, you can update these functions by overriding them in R or add novel functionlity in an R script and adapting the `preprocess_order` and `plot_order` lists accordingly.
+
+Note to the developer: you can use `get_param_settings_not_in_any_R_file()` to get a list of parameters that are defined, but seem not used in any R-script nor code snippet.
+
+## Structure of the software
+`r if (!exists("report_file_base_name")) report_file_base_name <- "*"`
+
+Please find
+
+- a copy of this manual: ``r fix_path(report_file_base_name)`.html`
+- a batch, sh and R-script to start James in ``r fix_path("")``
+- examples for this manual (xlsx) in ``r fix_path("examples/xlsx")`` 
+    - with `r length(list.files(fix_path("examples/xlsx", use_local_path = T)))` files total
+- examples for this manual (R) in ``r fix_path("examples/R")``
+    - with `r length(list.files(fix_path("examples/R", use_local_path = )))` files total
+- R-code in ``r fix_path("R/")``
+    - with `r length(list.files(fix_path("R")))` files total
+- images in ``r fix_path("ext/img/")``
+    - with `r length(list.files(fix_path("ext/img")))` files total
+- mapping user names, full names in ``r fix_path("ext/misc/")``
+    - with `r length(list.files(fix_path("ext/misc")))` files total
+- report examples, including this manual ``r fix_path("ext/report/")``
+    - with `r length(list.files(list.files("ext/report", recursive = T, pattern = "*.Rmd")))` files total
+- code snippets including templates to generate scripts in ``r fix_path("ext/snippet/")``
+    - with `r length(list.files(fix_path("ext/snippet")))` files total
+- markup files in ``r fix_path("ext/style/")``
+    - with `r length(list.files(fix_path("ext/style")))` files total
+
+## Stats for nerds
+James (version ``r report$james_version``) built this manual at `r Sys.time()`. This took `r round((Sys.time() - report$create_report_start_time)[[1]], 1)` seconds. The current version of James counts `r nrow(globals)` parameters.
+
+# Feature requests and future development
+Please add your feature requests or bug report here: [https://tinyurl.com/james-feature-request](https://tinyurl.com/james-feature-request), and <[contact the author](mailto:m.dijkstra@cpb.nl)> afterwards, so it's easy to
+
+- [x] mark what has been done
+- [ ] prioritize tasks
+- [ ] contact you
+
+# Troubleshooting
+In general, the advice is to work in small steps; *e.g.* changing one or two parameters at a time. This helps to isolate a potential problem. However, if you think you've found a bug, you indeed most likely did so. In which case, please first check whether there is a new version available in `r get_param("install_root_remote_prod_use_time")`. If not, then please put a copy of your xlsx-file in `M:/p_jamesgebruiker/q/$usr$` (please replace `$usr$` with your own user name) and e-mail your bug report to [m.dijkstra@cpb.nl](mailto:m.dijkstra@cpb.nl). Thanks!
+
+# Acknowledgements
+## On the origin of James
+On April 19, 2017, our King, Willem Alexander van Oranje-Nassau, officially
+opened our new building B30. That day, prof.dr. Bas Haring was one of the
+invited speaker. He encouraged us to present our results in terms of stories/parables.
+His idea inspired the author to frame the discussed software as a person called 'James'.
+A personal servant 'James' for each of our colleagues!
+
+## Kudos to all of you
+Meinou de Vries created James' logo. Many early users exposed bugs in the software.
+Kudos to all of you!
+
+![](ext/img/james-serves-90-110px.png)
+
+# Appendix
+## CBS Geo-regions
+<a name = "appendix-cbs-geo-regions"></a>
+This section lists all geo-regions you can choose from:
+
+<div style="text-align: left">
+*`r paste(sort(dget(fix_path(get_param("geo_cbs_available_maps"), use_local_path = on_mac()))), collapse = ", ")`*.
+</div>
+
+## List of all parameters available to the user
+This section lists all parameters, which are available to the user, in alphabetical order. Many of these parameters are already documented in the manual above. If you want to make use of a parameter that is documented poorly (sorry for that), please <[contact the author](mailto:m.dijkstra@cpb.nl)>.
+
+`r describe_params_with_help_appendix_list(report)`

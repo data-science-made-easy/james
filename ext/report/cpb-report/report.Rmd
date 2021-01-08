@@ -1,0 +1,21 @@
+---
+title: "CPB example report"
+author: M. Dijkstra <[m.dijkstra@cpb.nl](mailto:m.dijkstra@cpb.nl)>
+output:
+  pdf_document:
+    toc: true
+    number_sections: true
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+toccolor: 'black'
+header-includes:
+    - \usepackage {hyperref}
+    - \hypersetup {colorlinks = true, linkcolor = blue, urlcolor = blue}
+---
+
+\newcommand{\eg}{\emph{e.g.}~}
+\newcommand{\ie}{\emph{i.e.}~}
+\newcommand{\cq}{\emph{c.q.}~}
+\hyphenation{pa-ra-me-ters}
+
+# Overview
+`r knitr::kable(custom_get_house_prices())`

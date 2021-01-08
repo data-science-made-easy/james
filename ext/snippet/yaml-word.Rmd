@@ -1,0 +1,4 @@
+output:
+  word_document:
+    reference_docx: ext/style/huisstijl-en.docx
+    keep_md: yes

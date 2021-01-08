@@ -1,0 +1,6 @@
+header-includes:
+   - \usepackage{booktabs}
+output:
+  pdf_document:
+    number_sections: true
+    keep_md: yes

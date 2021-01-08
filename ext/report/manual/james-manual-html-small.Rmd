@@ -1,0 +1,35 @@
+---
+title: "James' manual&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![](./ext/img/james-small.png)"
+author: "Dr. M. Dijkstra <[m.dijkstra@cpb.nl](mailto:m.dijkstra@cpb.nl)>"
+date: "Version: **`r report$james_version`**"
+output:
+  html_document:
+    number_sections: true
+    css: ext/style/style.css
+    keep_md: yes
+    toc: true
+    toc_depth: 2
+---
+
+`r knitr::opts_chunk$set(cache = TRUE, cache.path = "/tmp/cache/")`
+
+```{r, set_param_example_lst, echo = F, eval = T}
+report$param_example_lst <- create_parameter_usage_lst()
+```
+
+# hoi
+
+
+# Appendix
+## CBS Geo-regions
+<a name = "appendix-cbs-geo-regions"></a>
+This section lists all geo-regions you can choose from:
+
+<div style="text-align: left">
+*`r paste(sort(dget(fix_path(get_param("geo_cbs_available_maps"), use_local_path = on_mac()))), collapse = ", ")`*.
+</div>
+
+## List of all parameters available to the user
+This section lists all parameters, which are available to the user, in alphabetical order. Many of these parameters are already documented in the manual above. If you want to make use of a parameter that is documented poorly (sorry for that), please contact the author.
+
+`r describe_params_with_help_appendix_list(report)`

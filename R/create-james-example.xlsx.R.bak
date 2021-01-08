@@ -1,0 +1,63 @@
+create_james_example_xlsx <- function(james_example_xlsx = get_param("james_example_xlsx")) {
+  # print_debug_info(p)
+  skip_param_sets    <- c("# MANUAL", "# END_OF_SHEET")
+
+  file.copy(get_param("base-settings-path"), james_example_xlsx) # Start from base settins 
+
+  wb <- openxlsx::loadWorkbook(file = james_example_xlsx)
+  openxlsx::removeWorksheet(wb, sheet = "globals")
+
+  openxlsx::addWorksheet(wb, "help")
+  openxlsx::worksheetOrder(wb) = c(length(names(wb)), 2:length(names(wb)) - 1)
+
+  # Reference to manual
+  openxlsx::writeData(wb, "help", "Manual:", startRow = 1, startCol = 1)
+  openxlsx::writeData(wb, "help", get_param("manual-on-m"), startRow = 1, startCol = 2)
+  openxlsx::addStyle(wb,  "help", style = openxlsx::createStyle(textDecoration = c("bold", "italic")), rows = 1, cols = 1:3, gridExpand = TRUE)
+  openxlsx::writeData(wb, "help", "Open the manual for full documentation.", startRow = 1, startCol = 3)
+
+  # Header
+  openxlsx::writeData(wb, "help", t(c("PARAMETER", "EXAMPLE", "HELP")), startRow = 2, startCol = 1, colNames = FALSE)
+  openxlsx::addStyle(wb,  "help", style = openxlsx::createStyle(textDecoration = c("bold"), fgFill = "#ED7D31", fontColour = "white"), rows = 2, cols = 1:3, gridExpand = TRUE)
+
+  row_counter <- 3 # Row at which we place parameters
+  index_all_sets_start <- which("# " == stringr::str_sub(globals$param, 1, 2))
+  set_names <- globals$param[index_all_sets_start]
+  for (param_set in setdiff(set_names, skip_param_sets)) {
+    index_this_set_start <- which(param_set == globals$param)
+    index <- index_this_set_start:(index_all_sets_start[which(index_this_set_start < index_all_sets_start)[1]] - 1)
+  
+    # Add header + params
+    openxlsx::writeData(wb, "help", globals$param[index], startRow = row_counter, startCol = 1)
+    openxlsx::addStyle(wb,  "help", style = openxlsx::createStyle(textDecoration = c("bold"), fgFill = "#ED7D31", fontColour = "white"), rows = row_counter, cols = 1)
+
+    for (i in seq_along(index)) {  
+      param_info <- globals[index[i], ]
+      param <- globals$param[index[i]]
+
+      # Add example (use default value if no example given)
+      ex <- param_info[["example"]]
+      if (is.na(ex)) ex <- param_info[["default"]]
+      if (!is.na(ex))
+        openxlsx::writeData(wb, "help", ex , startRow = row_counter + i - 1, startCol = 2)
+
+      # Add help
+      openxlsx::writeData(wb, "help", describe_param(param, globals = globals, add_bold_name = FALSE) , startRow = row_counter + i - 1, startCol = 3)
+    }
+  
+    row_counter <- row_counter + length(index) # update row_counter
+  
+    # Empty row
+    openxlsx::writeData(wb, sheet = "help", x = NULL, startCol = 1, startRow = row_counter)
+    row_counter <- 1 + row_counter
+  
+    # print(paste(param_set, paste(index, collapse=",")))
+  }
+  openxlsx::addStyle(wb,  "help", style = openxlsx::createStyle(fgFill = "#ED7D31"), rows = row_counter - 1, cols = 1:3, gridExpand = TRUE)
+  openxlsx::setColWidths(wb, sheet = "help", cols = 1:3, widths = "auto")
+
+
+  openxlsx::saveWorkbook(wb, file = james_example_xlsx, overwrite = TRUE)
+  if (DEBUG) print(paste("Created", james_example_xlsx))  
+  return(james_example_xlsx)
+}

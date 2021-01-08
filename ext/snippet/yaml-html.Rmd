@@ -1,0 +1,5 @@
+output:
+  html_document:
+    number_sections: true
+    css: ext/style/style.css
+    keep_md: yes

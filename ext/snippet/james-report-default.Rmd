@@ -1,0 +1,5 @@
+
+> <span style="color:red">Please beware that browsers other than Chrome may not show the right font.</span>
+
+# Figures
+`r plot_all_figs_in_xlsx(report)`

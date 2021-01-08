@@ -1,0 +1,55 @@
+# Customize on this report
+This section explains how to quickly customize this report by changing the value of some parameters. You can find or add the parameters in the meta-tab of your xlsx-file (``r report$xlsx``) in the column which has `type = report`. For example, if you don't want the current section in your report, you can disable it by setting parameter `report_include_james_appendix = n`.
+
+A tip to quickly test text without repeatedly recreating your figures is setting `create = n` in your globals-tab. If you don't specify the `create` parameter in your meta-tab, no report and no figures will be created. So, setting `create = y` only for your report (in the meta-tab), makes sure, only the report itself is generated (*i.e.* without the figures). This makes it possible to change/update the text and watch the resulting report quicly. In the end, *i.e.* before creating the final report, you can put the original settings back and then generate the full report.
+
+## Choose output format (html, pdf)
+Please use `report_format` to indicate which report output formats you want. The default is `html`. You can choose from:
+
+1. document options
+- html
+- pdf
+- ~~word~~ [under development; this may not work]
+2. presentation options
+- ~~ioslides~~ [under development; this may not work]
+- ~~slidy~~ [under development; this may not work]
+- ~~powerpoint~~ [under development; this may not work]
+- ~~beamer~~ [under development; this may not work]
+
+You can choose one or more options at the same time (*e.g.* `report_format = html, pdf`).
+
+## Edit the front page
+In the 'report column' of your xlsx-file, you can set the parameters `title`, `author` and `date` to customize the title, author and date that are shown at the start of this report. For example, `author = prof.dr.ir. Great Me` will update the author as given here.
+
+## Customize the text in this report
+This section explains the simplest way to create your own custom report from Excel. First create a new tab in ``r report$xlsx`` for your custom text. Let's assume the name of this new tab is `my-custom-report`. Now add `tab = my-custom-report` to the meta-tab in your xlsx, in the column which has `type = report`.
+
+The text in this column will now appear in your report instead of the default text and figures.
+
+### Reproduce the out-of-the-box report
+Before doing anything fancy, let's first explain how to reproduce the report as it is now. Open the tab you've just created and add the content of [this code snippet](`r get_param("report_james_appendix_path")`). Please try whether this indeed gives you the exact same report. You can now add text and extend your report.
+
+### Adding custom text to your report
+The text you type in the Excel-tab may be accross multiple lines. You can put each line in a new cell. However, please use the first column only.
+
+### Style your text (headers, markup, etc.)
+This [good cheat sheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) explains how to add headers, lists, and make your text bold/italic, etc.
+
+### Plotting an individual figure
+```{r demo_plot, eval = F}
+plot("path/to/james-kmev2021.xlxs", id = "1a")
+```
+
+## Troubleshooting
+In case of odd behaviour, you can manually inspect the generated Rmd- and md-files of this report in ``r fix_path(report_dir)``. The subdirectory `generated` of this directory contains the separate figures in this report. Please beware, don't edit the generated Rmd- or md-files as they are overwritten each time again.
+
+## More details
+```{r, derive_manual_file_name, echo = F, eval = T}
+manual_file <- paste0("james-", get_param("james_version"), "-manual.html")
+```
+
+Please see [`r fix_path(manual_file)`](the manual) for further details on how to improve your report and figures.
+
+James (version ``r report$james_version``) finished this report at `r Sys.time()`. Time used: `r round((Sys.time() - report$create_report_start_time)[[1]], 1)` s.
+
+![](./ext/img/james-serves-90-110px.png)

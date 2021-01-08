@@ -1,0 +1,16 @@
+# SET LIB
+cpblib::use_cpblib(version = "`r get_param("cpb_lib_version")`")
+
+# LOAD JAMES
+james_r_files <- "`r fix_path("R")`"
+
+for (f in list.files(james_r_files, pattern = "*.R", full.names = T)) source(f)
+
+# LOAD GLOBALS
+globals <- NULL
+james_settings_file <- "`r fix_path(get_param("base-settings-path"))`"
+for (sh in openxlsx::getSheetNames(james_settings_file)) globals <- rbind(globals, openxlsx::read.xlsx(james_settings_file, sheet = sh))
+
+# (RE-)CREATE A CLEAN OUTPUT-DIR
+unlink(get_param("destination_path"), recursive = T); dir.create(get_param("destination_path"))
+

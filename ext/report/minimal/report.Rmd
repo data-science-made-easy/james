@@ -1,0 +1,34 @@
+---
+title: "Minimal test report"
+author: M. Dijkstra
+output:
+  pdf_document:
+    toc: true
+    number_sections: true
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+toccolor: 'black'
+header-includes:
+    - \usepackage {hyperref}
+    - \hypersetup {colorlinks = true, linkcolor = blue, urlcolor = blue}
+---
+
+# Test [1]: static figure
+![James, your figures at the push of a button!](./input/james.png){#id .class width=10%}
+
+```{r, echo = FALSE, results = 'asis'}
+cat("![LUKT DIT??](./input/james.png)")
+```
+
+# Test [2]: R figure
+```{r}
+print(getwd())
+plot(1, main = "in line plot; i.e. no james")
+```
+
+```{r, echo = FALSE, results = 'asis'}
+plot(james(data = WorldPhones, title="Woooehoe", style = "wide", font_size = 12))
+```
+
+
+# Test [3]: CBS data
+`r knitr::kable(head(cbs("https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70936NED/table?dl=A938")))`
